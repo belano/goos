@@ -1,0 +1,8 @@
+version: '2'
+services:
+  openfire:
+    image: goos/openfire:latest
+    ports:
+      - "9090:9090/tcp"
+      - "5222:5222/tcp"
+      - "7777:7777/tcp"

@@ -1,0 +1,30 @@
+=== goos
+
+Growing Object-Oriented Software Guided by Tests - Coding along the lines of the book's example.
+
+This project follows the example developed in the book http://www.growing-object-oriented-software.com/[Growing Object-Oriented Software Guided by Tests]
+by Steve Freeman and Nat Pryce.
+
+== Prerequisites
+
+The book's example code needs a JDK version 8 or higher. All further java dependencies are managed by https://maven.apache.org/[Maven].
+
+Prior to running integration tests, a docker image needs to be built locally - the bash script `docker-openfire/build_image.sh` does that for you,
+it creates a Docker image _goos-openfire_ that installs and configure an https://en.wikipedia.org/wiki/Openfire[Openfire server].
+
+Integration tests rely on the existence of the aforementioned image and
+make use of http://testcontainers.org[Testcontainers] library which provides throwaway instances of Openfire.
+
+== Build and run all Tests
+
+The build distinguishes between two different kinds of tests:
+
+* Unit tests: fast running tests. They are executed using:
+
+  ./mvnw test
+
+* Integration tests: Acceptance tests that once have driven development and now have to stay stable. They are designed to
+be as much end-to-end as possible, drive the UI directly and go through the whole stack, down to the Openfire chat server.
+They are run with the command:
+
+  ./mvnw verify
