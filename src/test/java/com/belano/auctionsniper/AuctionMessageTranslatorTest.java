@@ -16,7 +16,7 @@ class AuctionMessageTranslatorTest {
     private static final Chat UNUSED_CHAT = null;
 
     @Mock
-    private AuctionMessageListener listener;
+    private AuctionEventListener listener;
 
     private AuctionMessageTranslator translator;
 

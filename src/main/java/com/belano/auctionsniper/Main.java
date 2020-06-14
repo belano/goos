@@ -12,7 +12,7 @@ import java.awt.event.WindowEvent;
 
 import static javax.swing.SwingUtilities.invokeAndWait;
 
-public class Main implements AuctionMessageListener {
+public class Main {
 
     private static final int ARG_HOSTNAME = 0;
     private static final int ARG_PORT = 1;
@@ -51,10 +51,13 @@ public class Main implements AuctionMessageListener {
         disconnectWhenUICloses(connection);
         final Chat chat = connection.getChatManager()
                 .createChat(
-                        auctionId(itemId, connection),
-                        new AuctionMessageTranslator(this));
+                        auctionId(itemId, connection), null);
         this.notToBeGCd = chat;
-        chat.sendMessage(JOIN_COMMAND_FORMAT);
+        Auction auction = new XMPPAuction(chat);
+        chat.addMessageListener(
+                new AuctionMessageTranslator(new AuctionSniper(auction, new SniperStateDisplayer()))
+        );
+        auction.join();
     }
 
     private void disconnectWhenUICloses(XMPPConnection connection) {
@@ -83,13 +86,25 @@ public class Main implements AuctionMessageListener {
         return String.format(AUCTION_ID_FORMAT, itemId, connection.getServiceName());
     }
 
-    @Override
-    public void auctionClosed() {
-        SwingUtilities.invokeLater(() -> ui.showStatus(MainWindow.STATUS_LOST));
+    public class SniperStateDisplayer implements SniperListener {
+        @Override
+        public void sniperLost() {
+            showStatus(MainWindow.STATUS_LOST);
+        }
+
+        @Override
+        public void sniperBidding() {
+            showStatus(MainWindow.STATUS_BIDDING);
+        }
+
+        @Override
+        public void sniperWinning() {
+            showStatus(MainWindow.STATUS_WINNING);
+        }
+
+        private void showStatus(String status) {
+            SwingUtilities.invokeLater(() -> ui.showStatus(status));
+        }
     }
 
-    @Override
-    public void currentPrice(int currentPrice, int increment) {
-        // TODO
-    }
 }
