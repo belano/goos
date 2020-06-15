@@ -8,10 +8,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.belano.auctionsniper.AuctionEventListener.PriceSource;
+
 public class AuctionMessageTranslator implements MessageListener {
+    private final String sniperId;
     private final AuctionEventListener listener;
 
-    public AuctionMessageTranslator(AuctionEventListener listener) {
+    public AuctionMessageTranslator(String sniperId, AuctionEventListener listener) {
+        this.sniperId = sniperId;
         this.listener = listener;
     }
 
@@ -22,8 +26,8 @@ public class AuctionMessageTranslator implements MessageListener {
             listener.auctionClosed();
         } else if ("PRICE".equals(type)) {
             listener.currentPrice(
-                    event.currentPrice(), event.increment()
-            );
+                    event.currentPrice(), event.increment(),
+                    event.isFrom(sniperId));
         }
     }
 
@@ -61,5 +65,14 @@ public class AuctionMessageTranslator implements MessageListener {
             return getInt("Increment");
         }
 
+        public PriceSource isFrom(String sniperId) {
+            return sniperId.equals(bidder())
+                    ? PriceSource.FROM_SNIPER
+                    : PriceSource.FROM_OTHER_BIDDER;
+        }
+
+        public String bidder() {
+            return get("Bidder");
+        }
     }
 }

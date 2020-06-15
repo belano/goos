@@ -54,10 +54,15 @@ public class Main {
                         auctionId(itemId, connection), null);
         this.notToBeGCd = chat;
         Auction auction = new XMPPAuction(chat);
+        String username = getUsernameFrom(connection);
         chat.addMessageListener(
-                new AuctionMessageTranslator(new AuctionSniper(auction, new SniperStateDisplayer()))
+                new AuctionMessageTranslator(username, new AuctionSniper(auction, new SniperStateDisplayer()))
         );
         auction.join();
+    }
+
+    private String getUsernameFrom(XMPPConnection connection) {
+        return connection.getUser().substring(0, connection.getUser().indexOf('@'));
     }
 
     private void disconnectWhenUICloses(XMPPConnection connection) {
@@ -100,6 +105,11 @@ public class Main {
         @Override
         public void sniperWinning() {
             showStatus(MainWindow.STATUS_WINNING);
+        }
+
+        @Override
+        public void sniperWon() {
+            showStatus(MainWindow.STATUS_WON);
         }
 
         private void showStatus(String status) {
