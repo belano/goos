@@ -2,30 +2,36 @@ package com.belano.auctionsniper;
 
 public class AuctionSniper implements AuctionEventListener {
     private final Auction auction;
-    private final SniperListener sniperListener;
-    private boolean isWinning;
+    private final SniperListener listener;
+    private SniperSnapshot snapshot;
 
-    public AuctionSniper(Auction auction, SniperListener sniperListener) {
+    public AuctionSniper(String itemId, Auction auction, SniperListener listener) {
         this.auction = auction;
-        this.sniperListener = sniperListener;
+        this.listener = listener;
+        this.snapshot = SniperSnapshot.joining(itemId);
     }
 
     public void auctionClosed() {
-        if (isWinning) {
-            sniperListener.sniperWon();
-        } else {
-            sniperListener.sniperLost();
-        }
+        snapshot = snapshot.closed();
+        notifyChange();
     }
 
     @Override
-    public void currentPrice(int currentPrice, int increment, PriceSource priceSource) {
-        isWinning = priceSource == PriceSource.FROM_SNIPER;
-        if (isWinning) {
-            sniperListener.sniperWinning();
-        } else {
-            auction.bid(currentPrice + increment);
-            sniperListener.sniperBidding();
+    public void currentPrice(int price, int increment, PriceSource priceSource) {
+        switch (priceSource) {
+            case FROM_SNIPER:
+                snapshot = snapshot.winning(price);
+                break;
+            case FROM_OTHER_BIDDER:
+                int bid = price + increment;
+                auction.bid(bid);
+                snapshot = snapshot.bidding(price, bid);
+                break;
         }
+        notifyChange();
+    }
+
+    private void notifyChange() {
+        listener.sniperStateChanged(snapshot);
     }
 }

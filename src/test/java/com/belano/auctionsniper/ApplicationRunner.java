@@ -11,11 +11,14 @@ public class ApplicationRunner {
     private final HostAndPort hostAndPort;
     private final AuctionSniperDriver driver = new AuctionSniperDriver(1000);
 
+    private String itemId;
+
     public ApplicationRunner(HostAndPort hostAndPort) {
         this.hostAndPort = hostAndPort;
     }
 
     public void startBiddingIn(final FakeAuctionServer auction) {
+        itemId = auction.getItemId();
         Thread thread = new Thread("Test application") {
             @Override
             public void run() {
@@ -32,6 +35,8 @@ public class ApplicationRunner {
         };
         thread.setDaemon(true);
         thread.start();
+        driver.hasTitle(MainWindow.APPLICATION_TITLE);
+        driver.hasColumnTitles();
         driver.showsSniperStatus(MainWindow.STATUS_JOINING);
     }
 
@@ -39,16 +44,16 @@ public class ApplicationRunner {
         driver.showsSniperStatus(MainWindow.STATUS_LOST);
     }
 
-    public void showsSniperHasWonAuction() {
-        driver.showsSniperStatus(MainWindow.STATUS_WON);
+    public void showsSniperHasWonAuction(int lastPrice) {
+        driver.showsSniperStatus(itemId, lastPrice, lastPrice, MainWindow.STATUS_WON);
     }
 
-    public void hasShownSniperIsBidding() {
-        driver.showsSniperStatus(MainWindow.STATUS_BIDDING);
+    public void hasShownSniperIsBidding(int lastPrice, int lastBid) {
+        driver.showsSniperStatus(itemId, lastPrice, lastBid, MainWindow.STATUS_BIDDING);
     }
 
-    public void hasShownSniperIsWinning() {
-        driver.showsSniperStatus(MainWindow.STATUS_WINNING);
+    public void hasShownSniperIsWinning(int winningBid) {
+        driver.showsSniperStatus(itemId, winningBid, winningBid, MainWindow.STATUS_WINNING);
     }
 
     public void stop() {

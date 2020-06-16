@@ -1,12 +1,12 @@
 package com.belano.auctionsniper;
 
 import com.belano.auctionsniper.ui.MainWindow;
+import com.belano.auctionsniper.ui.SnipersTableModel;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
-import javax.swing.SwingUtilities;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -27,6 +27,7 @@ public class Main {
     public static final String JOIN_COMMAND_FORMAT = "";
     public static final String BID_COMMAND_FORMAT = "SOLVersion: 1.1; Command: BID; Price: %d;";
 
+    private final SnipersTableModel snipers = new SnipersTableModel();
     private MainWindow ui;
     private Chat notToBeGCd;
 
@@ -56,7 +57,10 @@ public class Main {
         Auction auction = new XMPPAuction(chat);
         String username = getUsernameFrom(connection);
         chat.addMessageListener(
-                new AuctionMessageTranslator(username, new AuctionSniper(auction, new SniperStateDisplayer()))
+                new AuctionMessageTranslator(
+                        username,
+                        new AuctionSniper(itemId, auction, new SwingThreadSniperListener(snipers))
+                )
         );
         auction.join();
     }
@@ -75,7 +79,7 @@ public class Main {
     }
 
     private void startUserInterface() throws Exception {
-        invokeAndWait(() -> ui = new MainWindow());
+        invokeAndWait(() -> ui = new MainWindow(snipers));
     }
 
     private static XMPPConnection connectTo(String hostname, String port, String username, String password) throws XMPPException {
@@ -91,30 +95,22 @@ public class Main {
         return String.format(AUCTION_ID_FORMAT, itemId, connection.getServiceName());
     }
 
-    public class SniperStateDisplayer implements SniperListener {
-        @Override
-        public void sniperLost() {
-            showStatus(MainWindow.STATUS_LOST);
+    /**
+     * Decorator that pushes updates onto the Swing event thread, delegating to SnipersTableModel
+     */
+    public static class SwingThreadSniperListener implements SniperListener {
+
+        private final SnipersTableModel snipers;
+
+        public SwingThreadSniperListener(SnipersTableModel snipers) {
+            this.snipers = snipers;
         }
 
         @Override
-        public void sniperBidding() {
-            showStatus(MainWindow.STATUS_BIDDING);
+        public void sniperStateChanged(SniperSnapshot snapshot) {
+            snipers.sniperStateChanged(snapshot);
         }
 
-        @Override
-        public void sniperWinning() {
-            showStatus(MainWindow.STATUS_WINNING);
-        }
-
-        @Override
-        public void sniperWon() {
-            showStatus(MainWindow.STATUS_WON);
-        }
-
-        private void showStatus(String status) {
-            SwingUtilities.invokeLater(() -> ui.showStatus(status));
-        }
     }
 
 }
