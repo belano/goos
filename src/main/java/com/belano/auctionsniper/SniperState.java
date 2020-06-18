@@ -26,9 +26,4 @@ public enum SniperState {
         throw new Defect("Auction is already closed");
     }
 
-    public static class Defect extends RuntimeException {
-        public Defect(String message) {
-            super(message);
-        }
-    }
 }

@@ -31,7 +31,7 @@ public class SniperStateTest {
     @ParameterizedTest
     @EnumSource(value = SniperState.class, names = {"LOST", "WON"})
     void invalidTransitionsWhenAuctionClosed(SniperState state) {
-        SniperState.Defect defect = assertThrows(SniperState.Defect.class, state::whenAuctionClosed);
+        Defect defect = assertThrows(Defect.class, state::whenAuctionClosed);
         assertThat(defect.getMessage(), is(notNullValue()));
     }
 }

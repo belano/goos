@@ -28,6 +28,7 @@ public class AuctionSniperEndToEndTest {
 
     private ApplicationRunner application;
     private FakeAuctionServer auction;
+    private FakeAuctionServer anotherAuction;
 
     @BeforeAll
     public void setUpOpenfire() {
@@ -39,6 +40,7 @@ public class AuctionSniperEndToEndTest {
     @BeforeEach
     public void setUp() {
         auction = new FakeAuctionServer(hostAndPort, "item-54321");
+        anotherAuction = new FakeAuctionServer(hostAndPort, "item-65432");
         application = new ApplicationRunner(hostAndPort);
     }
 
@@ -57,7 +59,7 @@ public class AuctionSniperEndToEndTest {
         application.startBiddingIn(auction);
         auction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID_REGEX);
         auction.reportPrice(1000, 98, "other bidder");
-        application.hasShownSniperIsBidding(1000, 1098);
+        application.hasShownSniperIsBidding(auction, 1000, 1098);
         auction.hasReceivedBid(1098, ApplicationRunner.SNIPER_XMPP_ID_REGEX);
         auction.announceClosed();
         application.showsSniperHasLostAuction();
@@ -69,12 +71,40 @@ public class AuctionSniperEndToEndTest {
         application.startBiddingIn(auction);
         auction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID_REGEX);
         auction.reportPrice(1000, 98, "other bidder");
-        application.hasShownSniperIsBidding(1000, 1098); // last price, last bid
+        application.hasShownSniperIsBidding(auction, 1000, 1098); // last price, last bid
         auction.hasReceivedBid(1098, ApplicationRunner.SNIPER_XMPP_ID_REGEX);
         auction.reportPrice(1098, 97, ApplicationRunner.SNIPER_ID);
-        application.hasShownSniperIsWinning(1098); // winning bid
+        application.hasShownSniperIsWinning(auction, 1098); // winning bid
         auction.announceClosed();
-        application.showsSniperHasWonAuction(1098); // last price
+        application.showsSniperHasWonAuction(auction, 1098); // last price
+    }
+
+    @Test
+    void sniperBidsForMultipleItems() throws Exception {
+        auction.startSellingItem();
+        anotherAuction.startSellingItem();
+
+        application.startBiddingIn(auction, anotherAuction);
+        auction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID_REGEX);
+        anotherAuction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID_REGEX);
+
+        auction.reportPrice(1000, 98, "other bidder");
+        auction.hasReceivedBid(1098, ApplicationRunner.SNIPER_XMPP_ID_REGEX);
+
+        anotherAuction.reportPrice(500, 21, "other bidder");
+        anotherAuction.hasReceivedBid(521, ApplicationRunner.SNIPER_XMPP_ID_REGEX);
+
+        auction.reportPrice(1098, 97, ApplicationRunner.SNIPER_ID);
+        anotherAuction.reportPrice(521, 22, ApplicationRunner.SNIPER_ID);
+
+        application.hasShownSniperIsWinning(auction, 1098);
+        application.hasShownSniperIsWinning(anotherAuction, 521);
+
+        auction.announceClosed();
+        anotherAuction.announceClosed();
+
+        application.showsSniperHasWonAuction(auction, 1098);
+        application.showsSniperHasWonAuction(anotherAuction, 521);
     }
 
     @AfterEach

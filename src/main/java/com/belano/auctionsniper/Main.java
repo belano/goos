@@ -9,6 +9,8 @@ import org.jivesoftware.smack.XMPPException;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.HashSet;
+import java.util.Set;
 
 import static javax.swing.SwingUtilities.invokeAndWait;
 
@@ -18,7 +20,6 @@ public class Main {
     private static final int ARG_PORT = 1;
     private static final int ARG_USERNAME = 2;
     private static final int ARG_PASSWORD = 3;
-    private static final int ARG_ITEM_ID = 4;
 
     public static final String AUCTION_RESOURCE = "Auction";
     public static final String ITEM_ID_AS_LOGIN = "auction-%s";
@@ -29,7 +30,7 @@ public class Main {
 
     private final SnipersTableModel snipers = new SnipersTableModel();
     private MainWindow ui;
-    private Chat notToBeGCd;
+    private Set<Chat> notToBeGCd = new HashSet<>();
 
     public static void main(String... args) throws Exception {
         Main main = new Main();
@@ -37,23 +38,24 @@ public class Main {
         String port = args[ARG_PORT];
         String username = args[ARG_USERNAME];
         String password = args[ARG_PASSWORD];
-        String itemId = args[ARG_ITEM_ID];
-        main.joinAuction(
-                connectTo(hostname, port, username, password),
-                itemId
-        );
+        XMPPConnection connection = connectTo(hostname, port, username, password);
+        main.disconnectWhenUICloses(connection);
+        for (int i = 4; i < args.length; i++) {
+            main.joinAuction(connection, args[i]);
+        }
     }
 
     public Main() throws Exception {
         startUserInterface();
     }
 
-    private void joinAuction(XMPPConnection connection, String itemId) throws XMPPException {
-        disconnectWhenUICloses(connection);
+    private void joinAuction(XMPPConnection connection, String itemId) throws Exception {
+        safelyAddItemToModel(itemId);
         final Chat chat = connection.getChatManager()
                 .createChat(
                         auctionId(itemId, connection), null);
-        this.notToBeGCd = chat;
+        this.notToBeGCd.add(chat);
+
         Auction auction = new XMPPAuction(chat);
         String username = getUsernameFrom(connection);
         chat.addMessageListener(
@@ -63,6 +65,10 @@ public class Main {
                 )
         );
         auction.join();
+    }
+
+    private void safelyAddItemToModel(String itemId) throws Exception {
+        invokeAndWait(() -> snipers.addSniper(SniperSnapshot.joining(itemId)));
     }
 
     private String getUsernameFrom(XMPPConnection connection) {

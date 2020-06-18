@@ -1,5 +1,7 @@
 package com.belano.auctionsniper;
 
+import java.util.Objects;
+
 public class SniperSnapshot {
 
     public final String itemId;
@@ -60,5 +62,9 @@ public class SniperSnapshot {
                 ", lastBid=" + lastBid +
                 ", sniperState=" + state +
                 '}';
+    }
+
+    public boolean isForSameItemAs(SniperSnapshot snapshot) {
+        return Objects.equals(this.itemId, snapshot.itemId);
     }
 }

@@ -1,21 +1,23 @@
 package com.belano.auctionsniper.ui;
 
+import com.belano.auctionsniper.Defect;
 import com.belano.auctionsniper.SniperListener;
 import com.belano.auctionsniper.SniperSnapshot;
 import com.belano.auctionsniper.SniperState;
 
 import javax.swing.table.AbstractTableModel;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SnipersTableModel extends AbstractTableModel implements SniperListener {
     private static final String[] STATUS_TEXT = {
             "JOINING", "BIDDING", "WINNING", "LOST", "WON"
     };
-    private static final SniperSnapshot STARTING_UP = new SniperSnapshot("", 0, 0, SniperState.JOINING);
-    private SniperSnapshot sniperSnapshot = STARTING_UP;
+    private final List<SniperSnapshot> snapshots = new ArrayList<>();
 
     @Override
     public int getRowCount() {
-        return 1;
+        return snapshots.size();
     }
 
     @Override
@@ -26,7 +28,7 @@ public class SnipersTableModel extends AbstractTableModel implements SniperListe
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         return Column.at(columnIndex)
-                .valueIn(sniperSnapshot);
+                .valueIn(snapshots.get(rowIndex));
     }
 
     @Override
@@ -40,7 +42,22 @@ public class SnipersTableModel extends AbstractTableModel implements SniperListe
 
     @Override
     public void sniperStateChanged(SniperSnapshot newSniperSnapshot) {
-        sniperSnapshot = newSniperSnapshot;
-        fireTableRowsUpdated(0, 0);
+        int rowMatching = rowMatching(newSniperSnapshot);
+        snapshots.set(rowMatching, newSniperSnapshot);
+        fireTableRowsUpdated(rowMatching, rowMatching);
     }
+
+    private int rowMatching(SniperSnapshot newSnapshot) {
+        for (int i = 0; i < snapshots.size(); i++) {
+            if (newSnapshot.isForSameItemAs(snapshots.get(i))) {
+                return i;
+            }
+        }
+        throw new Defect("Cannot find match for " + newSnapshot);
+    }
+
+    public void addSniper(SniperSnapshot snapshot) {
+        snapshots.add(snapshot);
+    }
+
 }
