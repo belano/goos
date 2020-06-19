@@ -21,6 +21,16 @@ public class ApplicationRunner {
     }
 
     public void startBiddingIn(final FakeAuctionServer... auctions) {
+        startSniper(auctions);
+        Arrays.stream(auctions)
+                .map(FakeAuctionServer::getItemId)
+                .forEach(itemId -> {
+                    driver.startBiddingFor(itemId);
+                    driver.showsSniperStatus(itemId, 0, 0, textFor(SniperState.JOINING));
+                });
+    }
+
+    private void startSniper(FakeAuctionServer[] auctions) {
         Thread thread = new Thread("Test application") {
             @Override
             public void run() {
@@ -35,9 +45,6 @@ public class ApplicationRunner {
         thread.start();
         driver.hasTitle(MainWindow.APPLICATION_TITLE);
         driver.hasColumnTitles();
-        Arrays.stream(auctions).forEach(auction -> {
-            driver.showsSniperStatus(auction.getItemId(), 0, 0, textFor(SniperState.JOINING));
-        });
     }
 
     private String[] arguments(FakeAuctionServer... auctions) {

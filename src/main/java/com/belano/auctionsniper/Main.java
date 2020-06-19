@@ -40,35 +40,31 @@ public class Main {
         String password = args[ARG_PASSWORD];
         XMPPConnection connection = connectTo(hostname, port, username, password);
         main.disconnectWhenUICloses(connection);
-        for (int i = 4; i < args.length; i++) {
-            main.joinAuction(connection, args[i]);
-        }
+        main.addUserRequestListenerFor(connection);
     }
 
     public Main() throws Exception {
         startUserInterface();
     }
 
-    private void joinAuction(XMPPConnection connection, String itemId) throws Exception {
-        safelyAddItemToModel(itemId);
-        final Chat chat = connection.getChatManager()
-                .createChat(
-                        auctionId(itemId, connection), null);
-        this.notToBeGCd.add(chat);
+    private void addUserRequestListenerFor(XMPPConnection connection) {
+        ui.addUserRequestListener(itemId -> {
+            snipers.addSniper(SniperSnapshot.joining(itemId));
+            final Chat chat = connection.getChatManager()
+                    .createChat(
+                            auctionId(itemId, connection), null);
+            notToBeGCd.add(chat);
 
-        Auction auction = new XMPPAuction(chat);
-        String username = getUsernameFrom(connection);
-        chat.addMessageListener(
-                new AuctionMessageTranslator(
-                        username,
-                        new AuctionSniper(itemId, auction, new SwingThreadSniperListener(snipers))
-                )
-        );
-        auction.join();
-    }
-
-    private void safelyAddItemToModel(String itemId) throws Exception {
-        invokeAndWait(() -> snipers.addSniper(SniperSnapshot.joining(itemId)));
+            Auction auction = new XMPPAuction(chat);
+            String username = getUsernameFrom(connection);
+            chat.addMessageListener(
+                    new AuctionMessageTranslator(
+                            username,
+                            new AuctionSniper(itemId, auction, new SwingThreadSniperListener(snipers))
+                    )
+            );
+            auction.join();
+        });
     }
 
     private String getUsernameFrom(XMPPConnection connection) {
