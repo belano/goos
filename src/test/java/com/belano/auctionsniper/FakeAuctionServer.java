@@ -7,6 +7,8 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.testcontainers.shaded.com.google.common.net.HostAndPort;
 
+import static com.belano.auctionsniper.xmpp.XMPPAuctionHouse.AUCTION_RESOURCE;
+import static com.belano.auctionsniper.xmpp.XMPPAuctionHouse.ITEM_ID_AS_LOGIN;
 import static java.lang.String.format;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -31,8 +33,8 @@ public class FakeAuctionServer {
 
     public void startSellingItem() throws XMPPException {
         connection.connect();
-        connection.login(format(Main.ITEM_ID_AS_LOGIN, getItemId()),
-                AUCTION_PASSWORD, Main.AUCTION_RESOURCE);
+        connection.login(format(ITEM_ID_AS_LOGIN, getItemId()),
+                AUCTION_PASSWORD, AUCTION_RESOURCE);
         connection.getChatManager()
                 .addChatListener((chat, createdLocally) -> {
                     currentChat = chat;

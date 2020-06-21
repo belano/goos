@@ -8,16 +8,14 @@ import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
-import static com.belano.auctionsniper.Main.AUCTION_ID_FORMAT;
-
 public class XMPPAuction implements Auction {
     private final AuctionEventAnnouncer auctionEventListeners = new AuctionEventAnnouncer();
     private final Chat chat;
 
-    public XMPPAuction(XMPPConnection connection, String itemId) {
+    public XMPPAuction(XMPPConnection connection, String auctionId) {
         chat = connection.getChatManager()
                 .createChat(
-                        auctionId(itemId, connection),
+                        auctionId,
                         new AuctionMessageTranslator(
                                 getUsernameFrom(connection),
                                 auctionEventListeners)
@@ -51,11 +49,6 @@ public class XMPPAuction implements Auction {
         return connection.getUser()
                 .substring(0, connection.getUser()
                         .indexOf('@'));
-    }
-
-    private static String auctionId(String itemId, XMPPConnection connection) {
-        // "auction-item-xxxxx@serviceName/Auction"
-        return String.format(AUCTION_ID_FORMAT, itemId, connection.getServiceName());
     }
 
 }

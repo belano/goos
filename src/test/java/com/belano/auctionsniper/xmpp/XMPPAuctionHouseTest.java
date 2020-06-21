@@ -4,10 +4,12 @@ import com.belano.auctionsniper.Auction;
 import com.belano.auctionsniper.AuctionEventListener;
 import com.belano.auctionsniper.FakeAuctionServer;
 import com.belano.testcontainers.OpenfireContainer;
-import org.jivesoftware.smack.ConnectionConfiguration;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.junit.jupiter.Container;
@@ -17,9 +19,9 @@ import org.testcontainers.shaded.com.google.common.net.HostAndPort;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static com.belano.auctionsniper.ApplicationRunner.*;
+import static com.belano.auctionsniper.ApplicationRunner.SNIPER_ID;
+import static com.belano.auctionsniper.ApplicationRunner.SNIPER_PASSWORD;
 import static com.belano.auctionsniper.ApplicationRunner.SNIPER_XMPP_ID_REGEX;
-import static com.belano.auctionsniper.Main.AUCTION_RESOURCE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
@@ -27,9 +29,9 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 @Testcontainers
 @TestInstance(PER_CLASS)
 @Tag("integration")
-public class XMPPAuctionTest {
+public class XMPPAuctionHouseTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(XMPPAuctionTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(XMPPAuctionHouseTest.class);
 
     @Container
     private static final OpenfireContainer container = new OpenfireContainer();
@@ -37,7 +39,7 @@ public class XMPPAuctionTest {
     private static HostAndPort hostAndPort;
 
     private FakeAuctionServer auctionServer;
-    private XMPPConnection connection;
+    private AuctionHouse auctionHouse;
 
     @BeforeAll
     public void setUpOpenfire() {
@@ -55,18 +57,19 @@ public class XMPPAuctionTest {
     @AfterEach
     void tearDown() {
         auctionServer.stop();
-        connection.disconnect();
+        auctionHouse.disconnect();
     }
 
     @Test
     void receivesEventsFromAuctionServerAfterJoining() throws Exception {
         CountDownLatch auctionWasClosed = new CountDownLatch(1);
-        connection = connectTo(
+        auctionHouse = XMPPAuctionHouse.connectTo(
                 hostAndPort.getHostText(),
-                String.valueOf(hostAndPort.getPort())
+                String.valueOf(hostAndPort.getPort()),
+                SNIPER_ID,
+                SNIPER_PASSWORD
         );
-        Auction auction = new XMPPAuction(
-                connection, ITEM_ID);
+        Auction auction = auctionHouse.auctionFor(ITEM_ID);
         auction.addAuctionEventListener(auctionClosedListener(auctionWasClosed));
 
         auction.join();
@@ -74,14 +77,6 @@ public class XMPPAuctionTest {
         auctionServer.announceClosed();
 
         assertThat("Should have been closed", auctionWasClosed.await(2, TimeUnit.SECONDS), is(true));
-    }
-
-    private static XMPPConnection connectTo(String hostname, String port) throws XMPPException {
-        ConnectionConfiguration config = new ConnectionConfiguration(hostname, Integer.parseInt(port));
-        XMPPConnection connection = new XMPPConnection(config);
-        connection.connect();
-        connection.login(SNIPER_ID, SNIPER_PASSWORD, AUCTION_RESOURCE);
-        return connection;
     }
 
     private AuctionEventListener auctionClosedListener(CountDownLatch auctionWasClosed) {
