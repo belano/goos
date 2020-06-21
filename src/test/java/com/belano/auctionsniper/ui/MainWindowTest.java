@@ -2,6 +2,8 @@ package com.belano.auctionsniper.ui;
 
 import com.belano.auctionsniper.AuctionSniperDriver;
 import com.objogate.wl.swing.probe.ValueMatcherProbe;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -11,8 +13,13 @@ import static org.hamcrest.CoreMatchers.equalTo;
 public class MainWindowTest {
 
     private final SnipersTableModel tableModel = new SnipersTableModel();
-    private final MainWindow mainWindow = new MainWindow(tableModel);
     private final AuctionSniperDriver driver = new AuctionSniperDriver(100);
+    private MainWindow mainWindow;
+
+    @BeforeEach
+    void setUp() {
+        mainWindow = new MainWindow(tableModel);
+    }
 
     @Test
     void makesUserRequestWhenJoinButtonClicked() {
@@ -23,5 +30,10 @@ public class MainWindowTest {
 
         driver.startBiddingFor("an item-id");
         driver.check(buttonProbe);
+    }
+
+    @AfterEach
+    void tearDown() {
+        mainWindow.dispose();
     }
 }

@@ -2,7 +2,7 @@ package com.belano.auctionsniper;
 
 import com.belano.auctionsniper.ui.MainWindow;
 import com.belano.auctionsniper.ui.SnipersTableModel;
-import org.jivesoftware.smack.Chat;
+import com.belano.auctionsniper.xmpp.XMPPAuction;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
@@ -30,7 +30,7 @@ public class Main {
 
     private final SnipersTableModel snipers = new SnipersTableModel();
     private MainWindow ui;
-    private Set<Chat> notToBeGCd = new HashSet<>();
+    private Set<Auction> notToBeGCd = new HashSet<>();
 
     public static void main(String... args) throws Exception {
         Main main = new Main();
@@ -50,25 +50,13 @@ public class Main {
     private void addUserRequestListenerFor(XMPPConnection connection) {
         ui.addUserRequestListener(itemId -> {
             snipers.addSniper(SniperSnapshot.joining(itemId));
-            final Chat chat = connection.getChatManager()
-                    .createChat(
-                            auctionId(itemId, connection), null);
-            notToBeGCd.add(chat);
-
-            Auction auction = new XMPPAuction(chat);
-            String username = getUsernameFrom(connection);
-            chat.addMessageListener(
-                    new AuctionMessageTranslator(
-                            username,
-                            new AuctionSniper(itemId, auction, new SwingThreadSniperListener(snipers))
-                    )
+            Auction auction = new XMPPAuction(connection, itemId);
+            notToBeGCd.add(auction);
+            auction.addAuctionEventListener(
+                    new AuctionSniper(itemId, auction, new SwingThreadSniperListener(snipers))
             );
             auction.join();
         });
-    }
-
-    private String getUsernameFrom(XMPPConnection connection) {
-        return connection.getUser().substring(0, connection.getUser().indexOf('@'));
     }
 
     private void disconnectWhenUICloses(XMPPConnection connection) {
@@ -90,11 +78,6 @@ public class Main {
         connection.connect();
         connection.login(username, password, AUCTION_RESOURCE);
         return connection;
-    }
-
-    private static String auctionId(String itemId, XMPPConnection connection) {
-        // "auction-item-xxxxx@serviceName/Auction"
-        return String.format(AUCTION_ID_FORMAT, itemId, connection.getServiceName());
     }
 
     /**

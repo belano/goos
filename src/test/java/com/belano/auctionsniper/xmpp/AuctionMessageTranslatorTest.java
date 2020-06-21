@@ -1,5 +1,6 @@
-package com.belano.auctionsniper;
+package com.belano.auctionsniper.xmpp;
 
+import com.belano.auctionsniper.AuctionEventListener;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.packet.Message;
 import org.junit.jupiter.api.BeforeEach;
