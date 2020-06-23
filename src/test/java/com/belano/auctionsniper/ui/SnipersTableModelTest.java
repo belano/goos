@@ -1,5 +1,6 @@
 package com.belano.auctionsniper.ui;
 
+import com.belano.auctionsniper.AuctionSniper;
 import com.belano.auctionsniper.SniperSnapshot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,8 @@ import static com.belano.auctionsniper.ui.SnipersTableModel.textFor;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SnipersTableModelTest {
@@ -45,10 +48,11 @@ class SnipersTableModelTest {
 
     @Test
     void setsSniperValuesInColumns() {
-        SniperSnapshot joining = SniperSnapshot.joining("item-id");
-        SniperSnapshot bidding = joining.bidding(555, 666);
+        AuctionSniper sniper = aSniperFor("item-id");
+        SniperSnapshot bidding = sniper.getSnapshot()
+                .bidding(555, 666);
 
-        model.addSniper(joining);
+        model.sniperAdded(sniper);
         model.sniperStateChanged(bidding);
 
         assertRowMatches(0, bidding);
@@ -60,17 +64,17 @@ class SnipersTableModelTest {
     void notifiesListenersWhenAddingASniper() {
         assertThat(model.getRowCount(), equalTo(0));
 
-        SniperSnapshot joining = SniperSnapshot.joining("item-123");
-        model.addSniper(joining);
+        AuctionSniper sniper = aSniperFor("item-id");
+        model.sniperAdded(sniper);
 
         assertThat(model.getRowCount(), equalTo(1));
-        assertRowMatches(0, joining);
+        assertRowMatches(0, sniper.getSnapshot());
     }
 
     @Test
     public void holdsSniperInAdditionOrder() {
-        model.addSniper(SniperSnapshot.joining("item 0"));
-        model.addSniper(SniperSnapshot.joining("item 1"));
+        model.sniperAdded(aSniperFor("item 0"));
+        model.sniperAdded(aSniperFor("item 1"));
 
         assertColumnEquals(0, Column.ITEM_IDENTIFIER, "item 0");
         assertColumnEquals(1, Column.ITEM_IDENTIFIER, "item 1");
@@ -78,15 +82,22 @@ class SnipersTableModelTest {
 
     @Test
     public void updatesCorrectRowForSniper() {
-        SniperSnapshot joining1 = SniperSnapshot.joining("item 0");
-        SniperSnapshot joining2 = SniperSnapshot.joining("item 1");
-        SniperSnapshot bidding = joining2.bidding(22, 22);
+        AuctionSniper sniper1 = aSniperFor("item 0");
+        AuctionSniper sniper2 = aSniperFor("item 1");
+        SniperSnapshot bidding = sniper2.getSnapshot()
+                .bidding(22, 22);
 
-        model.addSniper(joining1);
-        model.addSniper(joining2);
+        model.sniperAdded(sniper1);
+        model.sniperAdded(sniper2);
         model.sniperStateChanged(bidding);
 
         assertRowMatches(1, bidding);
+    }
+
+    private static AuctionSniper aSniperFor(String itemId) {
+        AuctionSniper sniper = mock(AuctionSniper.class);
+        when(sniper.getSnapshot()).thenReturn(SniperSnapshot.joining(itemId));
+        return sniper;
     }
 
     private void assertColumnEquals(int rowIndex, Column column, Object expected) {

@@ -2,12 +2,11 @@ package com.belano.auctionsniper;
 
 public class AuctionSniper implements AuctionEventListener {
     private final Auction auction;
-    private final SniperListener listener;
+    private SniperListener listener;
     private SniperSnapshot snapshot;
 
-    public AuctionSniper(String itemId, Auction auction, SniperListener listener) {
+    public AuctionSniper(String itemId, Auction auction) {
         this.auction = auction;
-        this.listener = listener;
         this.snapshot = SniperSnapshot.joining(itemId);
     }
 
@@ -33,5 +32,13 @@ public class AuctionSniper implements AuctionEventListener {
 
     private void notifyChange() {
         listener.sniperStateChanged(snapshot);
+    }
+
+    public SniperSnapshot getSnapshot() {
+        return snapshot;
+    }
+
+    public void addSniperListener(SniperListener listener) {
+        this.listener = listener;
     }
 }

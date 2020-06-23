@@ -7,8 +7,6 @@ import com.belano.auctionsniper.xmpp.XMPPAuctionHouse;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.HashSet;
-import java.util.Set;
 
 import static javax.swing.SwingUtilities.invokeAndWait;
 
@@ -22,9 +20,8 @@ public class Main {
     public static final String JOIN_COMMAND_FORMAT = "";
     public static final String BID_COMMAND_FORMAT = "SOLVersion: 1.1; Command: BID; Price: %d;";
 
-    private final SnipersTableModel snipers = new SnipersTableModel();
+    private final SniperPortfolio portfolio = new SniperPortfolio();
     private MainWindow ui;
-    private Set<Auction> notToBeGCd = new HashSet<>();
 
     public static void main(String... args) throws Exception {
         Main main = new Main();
@@ -42,15 +39,7 @@ public class Main {
     }
 
     private void addUserRequestListenerFor(AuctionHouse auctionHouse) {
-        ui.addUserRequestListener(itemId -> {
-            snipers.addSniper(SniperSnapshot.joining(itemId));
-            Auction auction = auctionHouse.auctionFor(itemId);
-            notToBeGCd.add(auction);
-            auction.addAuctionEventListener(
-                    new AuctionSniper(itemId, auction, new SwingThreadSniperListener(snipers))
-            );
-            auction.join();
-        });
+        ui.addUserRequestListener(new SniperLauncher(auctionHouse, portfolio));
     }
 
     private void disconnectWhenUICloses(AuctionHouse auctionHouse) {
@@ -63,25 +52,7 @@ public class Main {
     }
 
     private void startUserInterface() throws Exception {
-        invokeAndWait(() -> ui = new MainWindow(snipers));
-    }
-
-    /**
-     * Decorator that pushes updates onto the Swing event thread, delegating to SnipersTableModel
-     */
-    public static class SwingThreadSniperListener implements SniperListener {
-
-        private final SnipersTableModel snipers;
-
-        public SwingThreadSniperListener(SnipersTableModel snipers) {
-            this.snipers = snipers;
-        }
-
-        @Override
-        public void sniperStateChanged(SniperSnapshot snapshot) {
-            snipers.sniperStateChanged(snapshot);
-        }
-
+        invokeAndWait(() -> ui = new MainWindow(portfolio));
     }
 
 }

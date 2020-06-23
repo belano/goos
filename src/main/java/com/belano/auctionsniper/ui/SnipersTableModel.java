@@ -1,6 +1,8 @@
 package com.belano.auctionsniper.ui;
 
+import com.belano.auctionsniper.AuctionSniper;
 import com.belano.auctionsniper.Defect;
+import com.belano.auctionsniper.PortfolioListener;
 import com.belano.auctionsniper.SniperListener;
 import com.belano.auctionsniper.SniperSnapshot;
 import com.belano.auctionsniper.SniperState;
@@ -9,7 +11,7 @@ import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SnipersTableModel extends AbstractTableModel implements SniperListener {
+public class SnipersTableModel extends AbstractTableModel implements SniperListener, PortfolioListener {
     private static final String[] STATUS_TEXT = {
             "JOINING", "BIDDING", "WINNING", "LOST", "WON"
     };
@@ -56,8 +58,33 @@ public class SnipersTableModel extends AbstractTableModel implements SniperListe
         throw new Defect("Cannot find match for " + newSnapshot);
     }
 
-    public void addSniper(SniperSnapshot snapshot) {
-        snapshots.add(snapshot);
+    @Override
+    public void sniperAdded(AuctionSniper sniper) {
+        addSniperSnapshot(sniper.getSnapshot());
+        sniper.addSniperListener(new SwingThreadSniperListener(this));
     }
 
+    private void addSniperSnapshot(SniperSnapshot snapshot) {
+        snapshots.add(snapshot);
+        int row = snapshots.size() - 1;
+        fireTableRowsInserted(row, row);
+    }
+
+    /**
+     * Decorator that pushes updates onto the Swing event thread, delegating to SnipersTableModel
+     */
+    public static class SwingThreadSniperListener implements SniperListener {
+
+        private final SnipersTableModel snipers;
+
+        public SwingThreadSniperListener(SnipersTableModel snipers) {
+            this.snipers = snipers;
+        }
+
+        @Override
+        public void sniperStateChanged(SniperSnapshot snapshot) {
+            snipers.sniperStateChanged(snapshot);
+        }
+
+    }
 }

@@ -1,5 +1,7 @@
 package com.belano.auctionsniper.ui;
 
+import com.belano.auctionsniper.SniperPortfolio;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -28,17 +30,19 @@ public class MainWindow extends JFrame {
 
     private final Set<UserRequestListener> userRequests = new HashSet<>();
 
-    public MainWindow(SnipersTableModel snipers) throws HeadlessException {
+    public MainWindow(SniperPortfolio portfolio) throws HeadlessException {
         super(APPLICATION_TITLE);
         setName(MAIN_WINDOW_NAME);
-        fillContentPane(makeSnipersTable(snipers), makeControls());
+        fillContentPane(makeSnipersTable(portfolio), makeControls());
         pack();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
     }
 
-    private JTable makeSnipersTable(SnipersTableModel snipers) {
-        JTable snipersTable = new JTable(snipers);
+    private JTable makeSnipersTable(SniperPortfolio snipers) {
+        SnipersTableModel model = new SnipersTableModel();
+        snipers.addPortfolioListener(model);
+        JTable snipersTable = new JTable(model);
         snipersTable.setName(SNIPERS_TABLE_NAME);
         return snipersTable;
     }
