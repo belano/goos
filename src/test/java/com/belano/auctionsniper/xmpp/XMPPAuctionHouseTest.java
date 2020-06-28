@@ -3,6 +3,7 @@ package com.belano.auctionsniper.xmpp;
 import com.belano.auctionsniper.Auction;
 import com.belano.auctionsniper.AuctionEventListener;
 import com.belano.auctionsniper.FakeAuctionServer;
+import com.belano.auctionsniper.Item;
 import com.belano.testcontainers.OpenfireContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -69,7 +70,7 @@ public class XMPPAuctionHouseTest {
                 SNIPER_ID,
                 SNIPER_PASSWORD
         );
-        Auction auction = auctionHouse.auctionFor(ITEM_ID);
+        Auction auction = auctionHouse.auctionFor(new Item(ITEM_ID, 0));
         auction.addAuctionEventListener(auctionClosedListener(auctionWasClosed));
 
         auction.join();

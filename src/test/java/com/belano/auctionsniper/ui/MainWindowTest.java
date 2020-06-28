@@ -1,6 +1,7 @@
 package com.belano.auctionsniper.ui;
 
 import com.belano.auctionsniper.AuctionSniperDriver;
+import com.belano.auctionsniper.Item;
 import com.belano.auctionsniper.SniperPortfolio;
 import com.objogate.wl.swing.probe.ValueMatcherProbe;
 import org.junit.jupiter.api.AfterEach;
@@ -24,12 +25,12 @@ public class MainWindowTest {
 
     @Test
     void makesUserRequestWhenJoinButtonClicked() {
-        final ValueMatcherProbe<String> buttonProbe =
-                new ValueMatcherProbe<>(equalTo("an item-id"), "join request");
+        final ValueMatcherProbe<Item> buttonProbe =
+                new ValueMatcherProbe<>(equalTo(new Item("an item-id", 789)), "join request");
 
         mainWindow.addUserRequestListener(buttonProbe::setReceivedValue);
 
-        driver.startBiddingFor("an item-id");
+        driver.startBiddingFor("an item-id", 789);
         driver.check(buttonProbe);
     }
 

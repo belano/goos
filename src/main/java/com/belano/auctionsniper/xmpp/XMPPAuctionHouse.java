@@ -1,6 +1,7 @@
 package com.belano.auctionsniper.xmpp;
 
 import com.belano.auctionsniper.Auction;
+import com.belano.auctionsniper.Item;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
@@ -25,8 +26,8 @@ public class XMPPAuctionHouse implements AuctionHouse {
     }
 
     @Override
-    public Auction auctionFor(String itemId) {
-        return new XMPPAuction(connection, auctionId(itemId));
+    public Auction auctionFor(Item item) {
+        return new XMPPAuction(connection, auctionId(item));
     }
 
     @Override
@@ -34,8 +35,8 @@ public class XMPPAuctionHouse implements AuctionHouse {
         connection.disconnect();
     }
 
-    private String auctionId(String itemId) {
+    private String auctionId(Item item) {
         // "auction-item-xxxxx@serviceName/Auction"
-        return String.format(AUCTION_ID_FORMAT, itemId, connection.getServiceName());
+        return String.format(AUCTION_ID_FORMAT, item.identifier, connection.getServiceName());
     }
 }

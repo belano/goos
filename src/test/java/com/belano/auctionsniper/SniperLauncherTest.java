@@ -10,7 +10,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.inOrder;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,11 +33,11 @@ public class SniperLauncherTest {
 
     @Test
     void addsNewSniperToCollectorAndThenJoinsAuction() {
-        Mockito.when(auctionHouse.auctionFor(anyString()))
+        Mockito.when(auctionHouse.auctionFor(any(Item.class)))
                 .thenReturn(auction);
         InOrder orderedVerifier = inOrder(auction, collector);
 
-        sniperLauncher.joinAuction("some-item-id");
+        sniperLauncher.joinAuction(new Item("some-item-id", 0));
 
         orderedVerifier.verify(auction)
                 .addAuctionEventListener(any(AuctionSniper.class));
