@@ -1,7 +1,6 @@
 package com.belano.auctionsniper;
 
 import com.belano.auctionsniper.ui.MainWindow;
-import com.belano.auctionsniper.ui.SnipersTableModel;
 import com.belano.auctionsniper.xmpp.AuctionHouse;
 import com.belano.auctionsniper.xmpp.XMPPAuctionHouse;
 

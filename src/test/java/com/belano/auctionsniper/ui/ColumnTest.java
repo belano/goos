@@ -4,6 +4,7 @@ import com.belano.auctionsniper.SniperSnapshot;
 import com.belano.auctionsniper.SniperState;
 import org.junit.jupiter.api.Test;
 
+import static com.belano.auctionsniper.ui.SnipersTableModel.textFor;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -20,6 +21,6 @@ public class ColumnTest {
         assertThat("Unexpected item id", Column.ITEM_IDENTIFIER.valueIn(snapshot), equalTo(ITEM_ID));
         assertThat("Unexpected last price", Column.LAST_PRICE.valueIn(snapshot), equalTo(LAST_PRICE));
         assertThat("Unexpected last bid", Column.LAST_BID.valueIn(snapshot), equalTo(LAST_BID));
-        assertThat("Unexpected state", Column.SNIPER_STATE.valueIn(snapshot), equalTo(MainWindow.STATUS_BIDDING));
+        assertThat("Unexpected state", Column.SNIPER_STATE.valueIn(snapshot), equalTo(textFor(SniperState.BIDDING)));
     }
 }

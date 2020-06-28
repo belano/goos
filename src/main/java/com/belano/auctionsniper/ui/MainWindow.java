@@ -18,11 +18,6 @@ import java.util.Set;
 public class MainWindow extends JFrame {
 
     public static final String MAIN_WINDOW_NAME = "Auction Sniper Main";
-    public static final String STATUS_JOINING = "JOINING";
-    public static final String STATUS_LOST = "LOST";
-    public static final String STATUS_BIDDING = "BIDDING";
-    public static final String STATUS_WINNING = "WINNING";
-    public static final String STATUS_WON = "WON";
     public static final String APPLICATION_TITLE = "Auction Sniper";
     public static final String NEW_ITEM_ID_NAME = "item id";
     public static final String JOIN_BUTTON_NAME = "join button";
