@@ -127,9 +127,38 @@ public class AuctionSniperEndToEndTest {
         application.showsSniperHasLostAuction(auction, 1207, 1098);
     }
 
+    @Test
+    void sniperReportsInvalidAuctionMessageAndStopsRespondingToEvents() throws Exception {
+        String brokenMessage = "a broken message";
+        auction.startSellingItem();
+        anotherAuction.startSellingItem();
+
+        application.startBiddingIn(auction, anotherAuction);
+        auction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID_REGEX);
+
+        auction.reportPrice(500, 20, "other bidder");
+        auction.hasReceivedBid(520, ApplicationRunner.SNIPER_XMPP_ID_REGEX);
+
+        auction.sendInvalidMessageContaining(brokenMessage);
+        application.showsSniperHasFailed(auction);
+
+        auction.reportPrice(520, 21, "other bidder");
+        waitForAnotherAuctionEvent();
+
+        application.reportsInvalidMessage(auction, brokenMessage);
+        application.showsSniperHasFailed(auction);
+    }
+
+    private void waitForAnotherAuctionEvent() throws Exception {
+        anotherAuction.hasReceivedJoinRequestFrom(ApplicationRunner.SNIPER_XMPP_ID_REGEX);
+        anotherAuction.reportPrice(600, 6, "other bidder");
+        application.hasShownSniperIsBidding(anotherAuction, 600, 606);
+    }
+
     @AfterEach
     void tearDown() {
         auction.stop();
+        anotherAuction.stop();
         application.stop();
     }
 }

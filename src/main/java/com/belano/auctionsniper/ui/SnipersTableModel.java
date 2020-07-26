@@ -13,7 +13,7 @@ import java.util.List;
 
 public class SnipersTableModel extends AbstractTableModel implements SniperListener, PortfolioListener {
     private static final String[] STATUS_TEXT = {
-            "JOINING", "BIDDING", "WINNING", "LOSING", "LOST", "WON"
+            "JOINING", "BIDDING", "WINNING", "LOSING", "LOST", "WON", "FAILED"
     };
     private final List<SniperSnapshot> snapshots = new ArrayList<>();
 

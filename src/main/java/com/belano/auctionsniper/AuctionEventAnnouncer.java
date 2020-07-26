@@ -19,4 +19,9 @@ public class AuctionEventAnnouncer implements AuctionEventListener {
     public void currentPrice(int currentPrice, int increment, PriceSource priceSource) {
         listeners.forEach(listener -> listener.currentPrice(currentPrice, increment, priceSource));
     }
+
+    @Override
+    public void auctionFailed() {
+        listeners.forEach(AuctionEventListener::auctionFailed);
+    }
 }

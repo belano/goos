@@ -141,4 +141,11 @@ public class AuctionSniperTest {
         verify(listener).sniperStateChanged(new SniperSnapshot(ITEM_ID, 2000, 0, LOSING));
     }
 
+    @Test
+    void reportsFailedIfAuctionFailsWhenBidding() {
+        sniper.currentPrice(123, 45, FROM_OTHER_BIDDER);
+        sniper.auctionFailed();
+
+        verify(listener).sniperStateChanged(new SniperSnapshot(ITEM_ID, 0, 0, FAILED));
+    }
 }

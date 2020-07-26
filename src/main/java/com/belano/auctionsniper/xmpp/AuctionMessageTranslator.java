@@ -6,6 +6,7 @@ import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.packet.Message;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,7 +22,16 @@ public class AuctionMessageTranslator implements MessageListener {
     }
 
     public void processMessage(Chat chat, Message message) {
-        AuctionEvent event = AuctionEvent.from(message.getBody());
+        String messageBody = message.getBody();
+        try {
+            translate(messageBody);
+        } catch (Exception parseException) {
+            listener.auctionFailed();
+        }
+    }
+
+    private void translate(String messageBody) {
+        AuctionEvent event = AuctionEvent.from(messageBody);
         String type = event.type();
         if ("CLOSE".equals(type)) {
             listener.auctionClosed();
@@ -40,10 +50,14 @@ public class AuctionMessageTranslator implements MessageListener {
         }
 
         public static AuctionEvent from(String messageBody) {
-            Map<String, String> fields = Stream.of(messageBody.split(";"))
+            Map<String, String> fields = parseFields(messageBody);
+            return new AuctionEvent(fields);
+        }
+
+        private static Map<String, String> parseFields(String messageBody) {
+            return Stream.of(messageBody.split(";"))
                     .map(element -> element.split(":"))
                     .collect(Collectors.toMap(pair -> pair[0].trim(), pair -> pair[1].trim()));
-            return new AuctionEvent(fields);
         }
 
         public String type() {
@@ -51,7 +65,7 @@ public class AuctionMessageTranslator implements MessageListener {
         }
 
         private String get(String fieldName) {
-            return fields.get(fieldName);
+            return Objects.requireNonNull(fields.get(fieldName));
         }
 
         private int getInt(String fieldName) {
