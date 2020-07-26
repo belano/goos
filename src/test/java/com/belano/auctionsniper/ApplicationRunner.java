@@ -3,10 +3,12 @@ package com.belano.auctionsniper;
 import com.belano.auctionsniper.ui.MainWindow;
 import org.testcontainers.shaded.com.google.common.net.HostAndPort;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import static com.belano.auctionsniper.ui.SnipersTableModel.textFor;
+import static org.hamcrest.CoreMatchers.containsString;
 
 public class ApplicationRunner {
 
@@ -15,6 +17,7 @@ public class ApplicationRunner {
     public static final String SNIPER_XMPP_ID_REGEX = "^sniper@\\w+/Auction$";
     private final HostAndPort hostAndPort;
     private final AuctionSniperDriver driver = new AuctionSniperDriver(1000);
+    private final AuctionLogDriver logDriver = new AuctionLogDriver();
 
     public ApplicationRunner(HostAndPort hostAndPort) {
         this.hostAndPort = hostAndPort;
@@ -35,6 +38,7 @@ public class ApplicationRunner {
     }
 
     private void startSniper(FakeAuctionServer[] auctions) {
+        logDriver.clearLog();
         Thread thread = new Thread("Test application") {
             @Override
             public void run() {
@@ -90,7 +94,7 @@ public class ApplicationRunner {
         driver.dispose();
     }
 
-    public void reportsInvalidMessage(FakeAuctionServer auction, String brokenMessage) {
-        // TODO
+    public void reportsInvalidMessage(FakeAuctionServer auction, String brokenMessage) throws IOException {
+        logDriver.hasEntry(containsString(brokenMessage));
     }
 }

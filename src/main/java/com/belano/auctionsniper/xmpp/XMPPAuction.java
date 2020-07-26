@@ -11,8 +11,10 @@ import org.jivesoftware.smack.XMPPException;
 public class XMPPAuction implements Auction {
     private final AuctionEventAnnouncer auctionEventListeners = new AuctionEventAnnouncer();
     private final Chat chat;
+    private final XMPPFailureReporter failureReporter;
 
-    public XMPPAuction(XMPPConnection connection, String auctionId) {
+    public XMPPAuction(XMPPConnection connection, String auctionId, XMPPFailureReporter failureReporter) {
+        this.failureReporter = failureReporter;
         AuctionMessageTranslator translator = translatorFor(connection);
         chat = connection.getChatManager()
                 .createChat(
@@ -25,7 +27,7 @@ public class XMPPAuction implements Auction {
     private AuctionMessageTranslator translatorFor(XMPPConnection connection) {
         return new AuctionMessageTranslator(
                 getUsernameFrom(connection),
-                auctionEventListeners);
+                auctionEventListeners, failureReporter);
     }
 
     @Override

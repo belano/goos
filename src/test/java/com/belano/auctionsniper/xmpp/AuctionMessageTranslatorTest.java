@@ -10,6 +10,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.belano.auctionsniper.AuctionEventListener.PriceSource;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,11 +23,14 @@ class AuctionMessageTranslatorTest {
     @Mock
     private AuctionEventListener listener;
 
+    @Mock
+    XMPPFailureReporter failureReporter;
+
     private AuctionMessageTranslator translator;
 
     @BeforeEach
     void setUp() {
-        translator = new AuctionMessageTranslator(SNIPER_ID, listener);
+        translator = new AuctionMessageTranslator(SNIPER_ID, listener, failureReporter);
     }
 
     @Test
@@ -61,11 +66,14 @@ class AuctionMessageTranslatorTest {
     @Test
     void notifiesAuctionFailedWhenBadMessageReceived() {
         Message message = new Message();
-        message.setBody("a bad message");
+        String badMessage = "a bad message";
+        message.setBody(badMessage);
 
         translator.processMessage(UNUSED_CHAT, message);
 
         verify(listener).auctionFailed();
+        verify(failureReporter).cannotTranslateMessage(
+                eq(SNIPER_ID), eq(badMessage), any(Exception.class));
     }
 
     @Test

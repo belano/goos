@@ -15,10 +15,12 @@ import static com.belano.auctionsniper.AuctionEventListener.PriceSource;
 public class AuctionMessageTranslator implements MessageListener {
     private final String sniperId;
     private final AuctionEventListener listener;
+    private final XMPPFailureReporter failureReporter;
 
-    public AuctionMessageTranslator(String sniperId, AuctionEventListener listener) {
+    public AuctionMessageTranslator(String sniperId, AuctionEventListener listener, XMPPFailureReporter failureReporter) {
         this.sniperId = sniperId;
         this.listener = listener;
+        this.failureReporter = failureReporter;
     }
 
     public void processMessage(Chat chat, Message message) {
@@ -26,6 +28,7 @@ public class AuctionMessageTranslator implements MessageListener {
         try {
             translate(messageBody);
         } catch (Exception parseException) {
+            failureReporter.cannotTranslateMessage(sniperId, messageBody, parseException);
             listener.auctionFailed();
         }
     }
