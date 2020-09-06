@@ -17,7 +17,6 @@ import java.util.Objects;
 
 import static com.objogate.wl.swing.matcher.IterableComponentsMatcher.matching;
 import static com.objogate.wl.swing.matcher.JLabelTextMatcher.withLabelText;
-import static org.hamcrest.CoreMatchers.equalTo;
 
 public class AuctionSniperDriver extends JFrameDriver {
 
@@ -27,10 +26,6 @@ public class AuctionSniperDriver extends JFrameDriver {
                         named(MainWindow.MAIN_WINDOW_NAME),
                         showingOnScreen()
                 ), new AWTEventQueueProber(timeoutMillis, 100));
-    }
-
-    public void showsSniperStatus(String statusText) {
-        new JTableDriver(this).hasCell(withLabelText(equalTo(statusText)));
     }
 
     public void showsSniperStatus(String itemId, int lastPrice, int lastBid, String statusText) {
